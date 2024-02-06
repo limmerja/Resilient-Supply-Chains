@@ -1,0 +1,16 @@
+$p(t_0)$
+	 & -80.0 & -79.0 & 1.0$\nearrow$\\
+$p(t_s)$
+	 & -786.0 & -855.0 & -69.0$\searrow$\\
+$p(t_f)$
+	 & -78.0 & -112.0 & -34.0$\searrow$\\
+$p(t_{max})$
+	 & -98.0 & -106.0 & -8.0$\searrow$\\
+$performance \; impact$
+	 & -658.0 & -693.0 & -35.0$\searrow$\\
+$summary$
+	 & 0.7 & 0.8 & 0.0$\searrow$\\
+$failure \; rate$
+	 & 164.5 & 173.2 & 8.8$\nearrow$\\
+$recovery \; rate$
+	 & 236.0 & 247.7 & 11.7$\nearrow$\\
