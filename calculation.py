@@ -49,12 +49,14 @@ def calculate_distribution_sensitivity(demand_distributions, num_episodes = 100)
                     conf.DEMAND_MEAN = demand_distributions[i]['distribution'][j][0]
                     conf.DEMAND_STD_DEV = demand_distributions[i]['distribution'][j][1]
                     conf.BASE_STOCK_LEVELS = demand_distributions[i]['bs_levels'][j]
+                    save_path = 'normal' + '_' + str(conf.DEMAND_MEAN) + '_' + str(conf.DEMAND_STD_DEV)
                     f.write('$\\mathcal{N}(' + str(demand_distributions[i]['distribution'][j][0]) + ', \\,' + str(demand_distributions[i]['distribution'][j][1]) + '^{2})$\n\t')
                 elif i == 'uniform': 
                     conf.DEMAND_NORMAL = False
                     conf.DEMAND_MIN = demand_distributions[i]['distribution'][j][0]
-                    conf.DEMAND_MAX = demand_distributions[i]['distribution'][j][0]
+                    conf.DEMAND_MAX = demand_distributions[i]['distribution'][j][1]
                     conf.BASE_STOCK_LEVELS = demand_distributions[i]['bs_levels'][j]
+                    save_path = 'uniform' + '_' + str(conf.DEMAND_MIN) + '_' + str(conf.DEMAND_MAX)
                     f.write('$\\mathcal{U}(' + str(demand_distributions[i]['distribution'][j][0]) + ', \\,' + str(demand_distributions[i]['distribution'][j][1]) + ')$\n\t')
                 else: 
                     continue
@@ -64,13 +66,17 @@ def calculate_distribution_sensitivity(demand_distributions, num_episodes = 100)
                 model = PPO.load(path.join("runtime", conf.EVALUATION_MODEL), env=env) 
                 
                 _, base_stock_costs = run_base_stock_policy(env, num_episodes = num_episodes)
-                f.write(' & ' + str(round(sum(base_stock_costs) / (num_episodes-conf.EVALUATION_START), 2)))
+                f.write(' & ' + str(round(sum(base_stock_costs) / (num_episodes), 2)))
                 
                 _, sterman_costs = run_sterman_policy(env, num_episodes = num_episodes)
-                f.write(' & ' + str(round(sum(sterman_costs) / (num_episodes-conf.EVALUATION_START), 2)))
+                f.write(' & ' + str(round(sum(sterman_costs) / (num_episodes), 2)))
                 
                 _, agent_costs = evaluate_agent(env, model, num_episodes)
-                f.write(' & ' + str(round(sum(agent_costs) / (num_episodes-conf.EVALUATION_START), 2)) + '\\\\\n')
+                f.write(' & ' + str(round(sum(agent_costs) / (num_episodes), 2)) + '\\\\\n')
+                
+                
+                df = pd.DataFrame({'BS': base_stock_costs, 'STRM': sterman_costs, 'PPO': agent_costs})
+                df.to_csv(path.join('data', 'distribution', save_path), index = False)
                 
                 
 def calculate_sensitivity(min, max, attribute, norm = False, norm_base = 0, num_episodes = 100): 

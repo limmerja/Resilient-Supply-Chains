@@ -7,6 +7,7 @@ import pandas as pd
 from os import path
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import seaborn as sns
 
 def welford_update(existing_aggregate, new_value):
     """for a new value new_value, compute the new count, new mean, the new M2.
@@ -477,3 +478,47 @@ def create_resilience_plot_complete(info_dict, disruptions, plot_data, name, wid
 
     save_fig(fig, path.join('resilience', f'{name}_resilience'))
 
+def create_distribution_boxplots(demand_distributions, width = 'thesis'): 
+    bs = pd.DataFrame()
+    ppo = pd.DataFrame()
+
+    for i in demand_distributions.keys(): 
+        for j in range(len(demand_distributions[i]['distribution'])):
+            param_1 = str(demand_distributions[i]['distribution'][j][0])
+            param_2 = str(demand_distributions[i]['distribution'][j][1])
+            save_path =  i + '_' + param_1 + '_' + param_2
+            df = pd.read_csv(path.join('data', 'distribution',save_path))
+        
+            bs_df = df.rename(columns = {'BS': save_path})
+            ppo_df = df.rename(columns = {'PPO': save_path})
+            
+            bs = pd.concat((bs, bs_df[save_path]), axis = 1)
+            ppo = pd.concat((ppo, ppo_df[save_path]), axis = 1)
+
+    df = pd.concat({'BS': bs.melt(), 'PPO': ppo.melt()}, names=['Policy', 'old_index'])
+    df = df.reset_index(level=0).reset_index(drop=True)
+    
+    size = set_size(width)
+
+    g = sns.catplot(data=df, kind='box', col='variable', y='value', x='Policy', height=size[0]/2.5, aspect=size[1]/4, col_wrap=3)
+    g.add_legend()
+    titles = ['$\mathcal{N}(10, \,2^{2})$', '$\mathcal{N}(20, \,2^{2})$', '$\mathcal{N}(20, \,4^{2})$', 
+            '$\mathcal{U}(0, \,2)$', '$\mathcal{U}(0, \,8)$', '$\mathcal{U}(10, \,20)$']
+    axes = g.axes.flatten()
+    for i, ax in enumerate(axes): 
+        ax.set_title(titles[i])
+        ax.set_ylabel('Episode Cost')
+
+        for spine in ax.spines.values():
+            spine.set_edgecolor('black')  
+            spine.set_visible(True)
+            
+
+    labels = ["BS", "PPO"]
+    colors = [sns.color_palette()[0], sns.color_palette()[1]] 
+    legend_patches = [mpatches.Patch(color=color, label=label) for color, label in zip(colors, labels)]
+
+    g.fig.legend(handles=legend_patches, loc='lower center', bbox_to_anchor=(0.546,-0.04), ncol=len(labels))
+
+
+    save_fig(g, 'distributions')
